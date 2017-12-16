@@ -1,0 +1,57 @@
+- name: "Install awx server"
+  hosts: 127.0.0.1
+  connection: local
+  vars_files:
+    - vars.yml
+  tasks:
+  - name: "Check if awx is already cloned"
+    stat: 
+      path: "{{ awx_location }}"
+    register: awx_cloned
+  - name: "Clone awx repository. Patience please. It is over 200 MB"
+    git: repo=https://github.com/ansible/awx.git dest={{ awx_location }}
+    when: not awx_cloned.stat.exists
+  - name: "Add postgres hostname"
+    lineinfile:
+      path: "{{ awx_location }}/installer/inventory"
+      regexp: ".*pg_hostname.*"
+      line: "pg_hostname={{ pg_hostname }}"
+  - name: "Add postgres username"
+    lineinfile:
+      path: "{{ awx_location }}/installer/inventory"
+      regexp: ".*pg_username.*"
+      line: "pg_username={{ pg_username }}"
+  - name: "Add postgres password"
+    lineinfile:
+      path: "{{ awx_location }}/installer/inventory"
+      regexp: ".*pg_password.*"
+      line: "pg_password={{ pg_password }}"
+  - name: "Add postgres database"
+    lineinfile:
+      path: "{{ awx_location }}/installer/inventory"
+      regexp: ".*pg_database.*"
+      line: "pg_database={{ pg_database }}"
+  - name: "Add postgres port"
+    lineinfile:
+      path: "{{ awx_location }}/installer/inventory"
+      regexp: ".*pg_port.*"
+      line: "pg_port={{ pg_port }}"
+  - name: "Update apt"
+    apt: update_cache=yes
+    become: yes
+  - name: "Install postgresql"
+    become: yes
+    apt: name={{ item }}
+    with_items:
+      - postgresql
+      - libpq-dev
+      - python-psycopg2
+  - name: "Create database"
+    become: yes
+    become_user: postgres
+    postgresql_db: name={{ pg_database }}
+  - name: "Grant user access"
+    become: yes
+    become_user: postgres
+    postgresql_user: db={{ pg_database }} name={{ pg_username }} password= {{ pg_password }} priv=ALL
+     
