@@ -70,3 +70,35 @@
     postgresql_user: db={{ pg_sensors_database }} name={{ pg_sensors_username }} password={{ pg_sensors_password }} priv=ALL
     when: install_local_postgres|default(False)
     with_items: install_local_postgres
+  - name: "Add ssl access only for sensors database"
+    become: yes
+    lineinfile: 
+      path: /etc/postgresql/9.5/main/pg_hba.conf
+      regexp: ".*hostssl.*"
+      line: "hostssl {{ pg_sensors_database }} {{ pg_sensors_username }} 0.0.0.0/0 md5"
+    notify: restart postgresql 
+    when: install_local_postgres|default(False)
+    with_items:  install_local_postgres
+  - name:  "Add access from external ips"
+    become: yes
+    lineinfile:
+      path:  /etc/postgresql/9.5/main/postgresql.conf
+      regexp: ".*listen_addresses.*"
+      line: "listen_addresses = '*'"
+    notify: restart postgresql
+    when: install_local_postgres|default(False)
+    whith_items: install_local_postgres
+    # hostssl    DATABASE  USER  ADDRESS  METHOD  [OPTIONS
+  - name:
+    file:
+      path: ./keys
+      state: directory
+  - name: "Generate SSH keys"
+    shell: ssh-keygen -b 2048 -t rsa -f ./keys/awx -q -N ""
+    args:
+      creates: ./keys/awx
+  handlers:
+  - name: restart postgresql
+    service:
+      name: postgresql.service
+      state: restarted
