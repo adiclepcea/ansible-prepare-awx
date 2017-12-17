@@ -87,7 +87,7 @@
       line: "listen_addresses = '*'"
     notify: restart postgresql
     when: install_local_postgres|default(False)
-    whith_items: install_local_postgres
+    with_items: install_local_postgres
     # hostssl    DATABASE  USER  ADDRESS  METHOD  [OPTIONS
   - name:
     file:
