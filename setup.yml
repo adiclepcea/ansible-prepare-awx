@@ -36,6 +36,11 @@
       path: "{{ awx_location }}/installer/inventory"
       regexp: ".*pg_port.*"
       line: "pg_port={{ pg_port }}"
+  - name: "Link awx only to local port"
+    lineinfile:
+      path: "{{ awx_location }}/installer/inventory"
+      regexp: ".*host_port.*"
+      line: "host_port=127.0.0.1:80"
   - name: "Update apt"
     apt: update_cache=yes
     become: yes
@@ -88,15 +93,28 @@
     notify: restart postgresql
     when: install_local_postgres|default(False)
     with_items: install_local_postgres
-    # hostssl    DATABASE  USER  ADDRESS  METHOD  [OPTIONS
   - name:
     file:
-      path: ./keys
+      path: ./keys/nginx
       state: directory
   - name: "Generate SSH keys"
     shell: ssh-keygen -b 2048 -t rsa -f ./keys/awx -q -N ""
     args:
       creates: ./keys/awx
+  - name: "Generate private key for nginx"
+    openssl_privatekey:
+      path: ./keys/nginx/awx.local.pem
+  - name: "Generate CSR"
+    openssl_csr:
+      path: ./keys/nginx/awx.local.csr
+      privatekey_path: ./keys/nginx/awx.local.pem
+      common_name: "awx.local"
+  - name: "Generate public key for nginx"
+    openssl_certificate:
+      path: ./keys/nginx/awx.local.pub.pem
+      privatekey_path: ./keys/nginx/awx.local.pem
+      csr_path: ./keys/nginx/awx.local.csr
+      provider: selfsigned
   handlers:
   - name: restart postgresql
     service:
