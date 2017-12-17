@@ -50,8 +50,23 @@
     become: yes
     become_user: postgres
     postgresql_db: name={{ pg_database }}
+    when: install_local_postgres|default(False)
+    with_items: install_local_postgres
   - name: "Grant user access"
     become: yes
     become_user: postgres
     postgresql_user: db={{ pg_database }} name={{ pg_username }} password= {{ pg_password }} priv=ALL
-     
+    when: install_local_postgres|default(False)
+    with_items: install_local_postgres
+  - name: "Create sensor database"
+    become: yes
+    become_user: postgres
+    postgresql_db: name={{ pg_sensors_database }}
+    when: install_local_postgres|default(False)
+    with_items: install_local_postgres
+  - name: "Grant user access to sensor database"
+    become: yes
+    become_user: postgres
+    postgresql_user: db={{ pg_sensors_database }} name={{ pg_sensors_username }} password={{ pg_sensors_password }} priv=ALL
+    when: install_local_postgres|default(False)
+    with_items: install_local_postgres

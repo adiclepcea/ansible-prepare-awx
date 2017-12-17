@@ -1,7 +1,0 @@
-awx_location: ~/awxlocal
-pg_hostname: 10.0.2.15
-pg_username: awx
-pg_password: awxpass
-pg_database: awx
-pg_port: 5432
-
