@@ -60,7 +60,7 @@
   - name: "Grant user access"
     become: yes
     become_user: postgres
-    postgresql_user: db={{ pg_database }} name={{ pg_username }} password= {{ pg_password }} priv=ALL
+    postgresql_user: db={{ pg_database }} name={{ pg_username }} password={{ pg_password }} priv=ALL
     when: install_local_postgres|default(False)
     with_items: install_local_postgres
   - name: "Create sensor database"
@@ -81,7 +81,7 @@
       path: /etc/postgresql/9.5/main/pg_hba.conf
       regexp: ".*hostssl.*"
       line: "hostssl {{ pg_sensors_database }} {{ pg_sensors_username }} 0.0.0.0/0 md5"
-    notify: restart postgresql 
+    #notify: restart postgresql 
     when: install_local_postgres|default(False)
     with_items:  install_local_postgres
   - name:  "Add access from external ips"
@@ -90,6 +90,16 @@
       path:  /etc/postgresql/9.5/main/postgresql.conf
       regexp: ".*listen_addresses.*"
       line: "listen_addresses = '*'"
+    #notify: restart postgresql
+    when: install_local_postgres|default(False)
+    with_items: install_local_postgres
+  - name: "Add access to awx server"
+    become: yes
+    lineinfile:
+      path: /etc/postgresql/9.5/main/pg_hba.conf
+      line: "host {{ pg_database }} {{ pg_username }} 172.17.0.0/16 md5"
+      insertafter: "hostssl.*"
+      state: present
     notify: restart postgresql
     when: install_local_postgres|default(False)
     with_items: install_local_postgres
@@ -120,3 +130,4 @@
     service:
       name: postgresql.service
       state: restarted
+    become: yes
