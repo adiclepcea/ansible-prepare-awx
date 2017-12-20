@@ -1,0 +1,55 @@
+- name: AWX initial configuration
+  hosts: 127.0.0.1
+  connection: local
+  vars_files:
+    - towervars.yml
+  tasks:
+    - name: "Add organization"
+      tower_organization:
+        name: "{{ tower_org }}"
+        state: present
+        tower_username: "{{ tower_username }}"
+        tower_password: "{{ tower_password }}"
+        tower_host: "{{ tower_host }}"
+        tower_verify_ssl: False
+    - name: "Add inventory"
+      tower_inventory:
+        name: "{{ rpi_inventory }}"
+        description: "Raspberry PI inventory"
+        organization: "{{ tower_org }}"
+        state: present
+        tower_username: "{{ tower_username }}"
+        tower_password: "{{ tower_password }}"
+        tower_host: "{{ tower_host }}"
+        tower_verify_ssl: False
+      register: inv
+    - name: "Add user"
+      tower_user:
+        username: "{{ rpi_awx_username }}"
+        password: "{{ rpi_awx_password}}"
+        email: "{{ rpi_awx_email}}"
+        state: present
+        tower_username: "{{ tower_username }}"
+        tower_password: "{{ tower_password }}"
+        tower_host: "{{ tower_host }}"
+        tower_verify_ssl: False
+    - name: "Add role"
+      command: "tower-cli role grant --type admin --user {{ rpi_awx_username }} --inventory {{ inv.id }} -u {{ tower_username }} -p {{ tower_password }} -h {{ tower_host }} --insecure"
+    - name: "Add credential"
+      tower_credential:
+        name: "RPI Credential"
+        organization: "{{ tower_org}}"
+        kind: ssh
+        state: present
+        ssh_key_data: "{{ playbook_dir }}/keys/awx"
+        tower_username: "{{ tower_username }}"
+        tower_password: "{{ tower_password }}"
+        tower_host: "{{ tower_host }}"
+        tower_verify_ssl: False
+      register: cred
+    - name: "Add project"
+      command: "tower-cli project create --name=RPIProject --organization=\"{{ tower_org }}\" --scm-type=git --scm-url=\"{{ playbooks_repo }}\""
+    - name: "Setup template"
+      command: "tower-cli job_template create --name=\"RPI PoC\" --job-type=\"run\" --inventory={{ inv.id }} --project=\"RPIProject\" --credential=\"RPI Credential\" --playbook=\"setup.yml\""
+
+

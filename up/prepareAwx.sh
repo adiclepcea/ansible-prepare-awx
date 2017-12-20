@@ -78,6 +78,12 @@ echo "####################################"
 sudo pip install docker-py
 
 echo "####################################"
+echo Installing ansible-tower-cli
+echo "####################################"
+
+sudo pip install ansible-tower-cli
+
+echo "####################################"
 echo "Cloning ansible preparation playbook"
 echo "####################################"
 git clone https://github.com/adiclepcea/ansible-prepare-awx
