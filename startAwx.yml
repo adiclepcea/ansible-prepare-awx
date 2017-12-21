@@ -9,15 +9,11 @@
       path: "{{ awx_location }}"
     register: awx_cloned
 
-#  - name: "Start AWX"
-#    command: ansible-playbook -i inventory install.yml
-#    args:
-#      chdir: "{{ awx_location }}/installer"
-#    when: awx_cloned.stat.exists
   - name: "Start nginx reverse-proxy for https"
     docker_container:
       name: nginx-reverse-proxy
       image: nginx
+      restart_policy: unless-stopped
       volumes:
         - "{{ playbook_dir }}/files/nginx.conf:/etc/nginx/conf.d/default.conf:ro"
         - "{{ playbook_dir }}/keys/nginx:/etc/nginx/ssl"

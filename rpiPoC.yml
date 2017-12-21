@@ -36,20 +36,24 @@
     - name: "Add role"
       command: "tower-cli role grant --type admin --user {{ rpi_awx_username }} --inventory {{ inv.id }} -u {{ tower_username }} -p {{ tower_password }} -h {{ tower_host }} --insecure"
     - name: "Add credential"
-      tower_credential:
-        name: "RPI Credential"
-        organization: "{{ tower_org}}"
-        kind: ssh
-        state: present
-        ssh_key_data: "{{ playbook_dir }}/keys/awx"
-        tower_username: "{{ tower_username }}"
-        tower_password: "{{ tower_password }}"
-        tower_host: "{{ tower_host }}"
-        tower_verify_ssl: False
-      register: cred
+#      tower_credential:
+#        name: "RPI Credential"
+#        organization: "{{ tower_org}}"
+#        kind: ssh
+#        state: present
+#        ssh_key_data: "{{ playbook_dir }}/keys/awx"
+#        tower_username: "{{ tower_username }}"
+#        tower_password: "{{ tower_password }}"
+#        tower_host: "{{ tower_host }}"
+#        tower_verify_ssl: False
+#      register: credo
+      command: "{{ playbook_dir }}/createCredential.sh"
     - name: "Add project"
-      command: "tower-cli project create --name=RPIProject --organization=\"{{ tower_org }}\" --scm-type=git --scm-url=\"{{ playbooks_repo }}\""
+      command: "tower-cli project create --name=RPIProject --organization=\"{{ tower_org }}\" --scm-type=git --scm-url=\"/var/projects/RPIProject\" -u {{ tower_username }} -p {{ tower_password }} -h {{ tower_host }} --insecure"
+    - name: "Sleep for 30 seconds to make sure the project is synced"
+      pause:
+        seconds: 30
     - name: "Setup template"
-      command: "tower-cli job_template create --name=\"RPI PoC\" --job-type=\"run\" --inventory={{ inv.id }} --project=\"RPIProject\" --credential=\"RPI Credential\" --playbook=\"setup.yml\""
+      command: "tower-cli job_template create --name=\"RPI PoC\" --job-type=\"run\" --inventory={{ inv.id }} --project=\"RPIProject\" --credential=\"RPI Credential\" --playbook=\"rpiTemperature.yml\" -u {{ tower_username }} -p {{ tower_password }} -h {{ tower_host }} --insecure"
 
 

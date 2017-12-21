@@ -51,12 +51,16 @@
       path: "{{ boot_dir }}/ssh"
       state: touch
     become: yes
+  - name: "Test for line"
+    shell: "grep \"python /home/pi/register.py\" {{ root_dir }}/etc/rc.local || true"
+    register: test_grep 
   - name: "Setup autoregister on RPI system start"
     lineinfile:
       path: "{{ root_dir }}/etc/rc.local"
       insertbefore: "exit 0"
       state: present
       line: "python /home/pi/register.py || true"
+    when: test_grep.stdout != ""
     become: yes
   - name: "Copy autoregister script to python"
     copy:
