@@ -19,12 +19,13 @@ fi
 
 set -e
 
+cd ansible-prepare-awx
+
+ansible-playbook prepareAwx.yml
+
 pushd "$awx_dir/installer"
         ansible-playbook -i inventory install.yml
 popd
 
-cd ansible-prepare-awx
 
-ansible-playbook startAwx.yml
-
-
+ansible-playbook startAwx.yml --become
