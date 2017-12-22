@@ -100,9 +100,37 @@
       line: "host {{ pg_database }} {{ pg_username }} 172.17.0.0/16 md5"
       insertafter: "hostssl.*"
       state: present
+    when: install_local_postgres|default(False)
+    with_items: install_local_postgres
+  - name: "Create sensors table"
+    command: "psql -d sensorsdb -c 'create table if not exists sensordata(id bigserial PRIMARY KEY, MacAddress varchar(30), timestamp timestamp default CURRENT_TIMESTAMP, SensorValue double precision, SensorType varchar(20));'"
+    become: yes
+    become_user: postgres  
+  - name: "Grant access to seq"
+    postgresql_privs:
+      database: sensorsdb
+      state: present
+      privs: USAGE,SELECT
+      type: sequence
+      obj: sensordata_id_seq
+      schema: public
+      roles: sensors
+    become: yes
+    become_user: postgres
+  - name: "Grant access to sensorsdata table"
+    postgresql_privs:
+      database: sensorsdb
+      state: present
+      privs: SELECT,INSERT,UPDATE
+      type: table
+      objs: sensordata
+      schema: public
+      roles: sensors
     notify: restart postgresql
     when: install_local_postgres|default(False)
     with_items: install_local_postgres
+    become: yes
+    become_user: postgres
   - name:
     file:
       path: ./keys/nginx

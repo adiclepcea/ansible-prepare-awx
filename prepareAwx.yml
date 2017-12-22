@@ -1,0 +1,21 @@
+- name: "Modify AWX to map to projects dir"
+  hosts: 127.0.0.1
+  connection: local
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: "Test for line"
+      shell: "grep \"{{ playbook_dir }}/projects:/var/projects\" || true"
+      register: test_grep
+    - name: "Put volume map into awx_web"
+      lineinfile:
+        path: "{{awx_location }}/installer/local_docker/tasks/main.yml"
+        line: "    volumes:\n      - {{ playbook_dir }}/projects:/var/projects"
+        insertafter: ".*hostname: awxweb" 
+      when: test_grep.stdout != ""
+    - name: "Put volume map into awx_task"
+      lineinfile:
+        path: "{{awx_location }}/installer/local_docker/tasks/main.yml"
+        line: "    volumes:\n      - {{ playbook_dir }}/projects:/var/projects"
+        insertafter: ".*hostname: awx" 
+      when: test_grep.stdout != ""

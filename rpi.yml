@@ -1,0 +1,117 @@
+- name: "Add data to image"
+  hosts: 127.0.0.1
+  connection: local
+  vars_files: 
+    - vars.yml
+  tasks:
+  - debug: var=hostvars[inventory_hostname]['ansible_default_ipv4']['address']
+  - name: "Find info"
+    parted:
+      device: "{{ rpi_image }}"
+      state: info
+    register: img_info
+  - name: "Show info"
+    debug: var={{ (img_info.partitions[1].begin * 1024)|int|abs }}
+  - name: "Prepare root mount point"
+    file: 
+      path: "{{ root_dir }}"
+      state: directory
+  - name: "Prepare boot mount point"
+    file: 
+      path: "{{ boot_dir }}"
+      state: directory
+  - name: "Mount boot file system"
+    mount:
+      path: "{{ boot_dir }}"
+      src: "{{ rpi_image }}"
+      fstype: vfat
+      opts: "loop,offset={{ (img_info.partitions[0].begin * 1024)|int|abs }}"
+      state: mounted
+    become: yes
+  - name: "Mount root file system"
+    mount:
+      path: "{{ root_dir }}"
+      src: "{{ rpi_image }}"
+      fstype: ext4
+      opts: "loop,offset={{ (img_info.partitions[1].begin * 1024)|int|abs }}"
+      state: mounted
+    become: yes
+  - name: "Create .ssh directory in RPI image"
+    file:
+      path: "{{ root_dir }}/home/pi/.ssh"
+      state: directory
+      mode: 0700
+  - name: "Copy public key to raspberry"
+    copy:
+      src: ./keys/awx.pub
+      dest: "{{ root_dir }}/home/pi/.ssh/authorized_keys"
+      mode: 0644
+  - name: "Setup ssh on start on RPI image"
+    file:
+      path: "{{ boot_dir }}/ssh"
+      state: touch
+    become: yes
+  - name: "Test for line"
+    shell: "grep \"python /home/pi/register.py\" {{ root_dir }}/etc/rc.local || true"
+    register: test_grep 
+  - name: "Setup autoregister on RPI system start"
+    lineinfile:
+      path: "{{ root_dir }}/etc/rc.local"
+      insertbefore: "exit 0"
+      state: present
+      line: "python /home/pi/register.py || true"
+    when: test_grep.stdout != ""
+    become: yes
+  - name: "Copy autoregister script to python"
+    copy:
+      src: ./files/register.py
+      dest: "{{ root_dir }}/home/pi/register.py"
+      mode: 0700
+  - name: "Write awx_server to register script"
+    lineinfile:
+      path: "{{ root_dir }}/home/pi/register.py"
+      regexp: "HOST =.*"
+      state: present
+      line: "HOST = \"{{ awx_server }}\""
+  - name: "Write awx_username to register script"
+    lineinfile:
+      path: "{{ root_dir }}/home/pi/register.py"
+      regexp: "USERNAME =.*"
+      state: present
+      line: "USERNAME = \"{{ awx_username }}\""
+  - name: "Write awx_password to register script"
+    lineinfile:
+      path: "{{ root_dir }}/home/pi/register.py"
+      regexp: "PASSWORD =.*"
+      state: present
+      line: "PASSWORD = \"{{ awx_password }}\""
+  - name: "Write awx_inventory to register script"
+    lineinfile:
+      path: "{{ root_dir }}/home/pi/register.py"
+      regexp: "INVENTORY_NAME =.*"
+      state: present
+      line: "INVENTORY_NAME = \"{{ awx_inventory }}\""
+  - name: "Umount boot file system"
+    mount:
+      path: "{{ boot_dir }}"
+      src: "{{ rpi_image }}"
+      state: unmounted
+    become: yes
+  - name: "Remove boot fs from fstab"
+    mount:
+      path: "{{ boot_dir }}"
+      src: "{{ rpi_image }}"
+      state: absent
+    become: yes
+  - name: "Umount root file system"
+    mount:
+      path: "{{ root_dir }}"
+      src: "{{ rpi_image }}"
+      state: unmounted
+    become: yes
+  - name: "Remove root fs from fstab"
+    mount:
+      path: "{{ root_dir }}"
+      src: "{{ rpi_image }}"
+      state: absent
+    become: yes

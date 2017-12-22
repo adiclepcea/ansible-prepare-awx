@@ -1,0 +1,3 @@
+- name: "Push the temperature reader to raspberry"
+  tasks:
+    - debug: var=playbook_dir
