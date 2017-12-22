@@ -49,7 +49,7 @@
 #      register: credo
       command: "{{ playbook_dir }}/createCredential.sh"
     - name: "Init git repository"
-      shell: "git init {{ playbook_dir }}/projects/RPIProject/ ; cd {{ playbook_dir }}/project/RPIProject/ ;git add . && git config user.name \"Commiter\" ; git config user.email \"test@test123.com\" ; git commit -m \"initial commit\" "
+      shell: "git init {{ playbook_dir }}/projects/RPIProject/ ; cd {{ playbook_dir }}/projects/RPIProject/ ; git config user.name \"Commiter\" ; git config user.email \"test@test123.com\" ; git add rpiTemperature.yml; git commit -m \"initial commit\" "
     - name: "Add project"
       command: "tower-cli project create --name=RPIProject --organization=\"{{ tower_org }}\" --scm-type=git --scm-url=\"/var/projects/RPIProject\" -u {{ tower_username }} -p {{ tower_password }} -h {{ tower_host }} --insecure"
     - name: "Sleep for 30 seconds to make sure the project is synced"
