@@ -1,3 +1,4 @@
 #! /bin/bash
 
-ansible-playbook rpi.yml --ask-sudo-pass
+cd ansible-prepare-awx
+ansible-playbook rpi.yml 

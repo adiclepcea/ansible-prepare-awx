@@ -12,10 +12,10 @@
         path: "{{awx_location }}/installer/local_docker/tasks/main.yml"
         line: "    volumes:\n      - {{ playbook_dir }}/projects:/var/projects"
         insertafter: ".*hostname: awxweb" 
-      when: test_grep.stdout != ""
+      when: test_grep.stdout == ""
     - name: "Put volume map into awx_task"
       lineinfile:
         path: "{{awx_location }}/installer/local_docker/tasks/main.yml"
         line: "    volumes:\n      - {{ playbook_dir }}/projects:/var/projects"
         insertafter: ".*hostname: awx" 
-      when: test_grep.stdout != ""
+      when: test_grep.stdout == ""

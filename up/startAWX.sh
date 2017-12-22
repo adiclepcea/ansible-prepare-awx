@@ -28,4 +28,4 @@ pushd "$awx_dir/installer"
 popd
 
 
-ansible-playbook startAwx.yml --become
+ansible-playbook startAwx.yml 

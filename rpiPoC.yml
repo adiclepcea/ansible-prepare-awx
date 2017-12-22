@@ -14,7 +14,7 @@
       lineinfile:
         path: "{{ playbook_dir }}/projects/RPIProject/sendsensorsdata.py"
         regexp: "^PG_HOST =.*"
-        line: "PG_HOST = \"{{ awx_server }}\""
+        line: "PG_HOST = \"{{ pg_sensors_hostname }}\""
         state: present
       when: pocFile.stat.exists
     - name: "Set PG_PASSWORD"
@@ -90,7 +90,7 @@
 #      register: credo
       command: "{{ playbook_dir }}/createCredential.sh"
     - name: "Init git repository"
-      shell: "git init {{ playbook_dir }}/projects/RPIProject/ ; cd {{ playbook_dir }}/projects/RPIProject/ ; git config user.name \"Commiter\" ; git config user.email \"test@test123.com\" ; git add .; git commit -m \"initial commit\" "
+      shell: "cd {{ playbook_dir }}/projects/RPIProject/ ; git init .; git config user.name \"Commiter\" ; git config user.email \"test@test123.com\" ; git add .; git commit -m \"initial commit\" "
     - name: "Add project"
       command: "tower-cli project create --name=RPIProject --organization=\"{{ tower_org }}\" --scm-type=git --scm-url=\"/var/projects/RPIProject\" -u {{ tower_username }} -p {{ tower_password }} -h {{ tower_host }} --insecure"
     - name: "Sleep for 30 seconds to make sure the project is synced"
