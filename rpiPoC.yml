@@ -3,7 +3,48 @@
   connection: local
   vars_files:
     - towervars.yml
+    - vars.yml
   tasks:
+    - name: "Look for PoC file"
+      stat:
+        path: "{{ playbook_dir }}/projects/RPIProject/sendsensorsdata.py"
+      register: pocFile
+    - debug: var=pocFile
+    - name: "Set PG_HOST"
+      lineinfile:
+        path: "{{ playbook_dir }}/projects/RPIProject/sendsensorsdata.py"
+        regexp: "^PG_HOST =.*"
+        line: "PG_HOST = \"{{ awx_server }}\""
+        state: present
+      when: pocFile.stat.exists
+    - name: "Set PG_PASSWORD"
+      lineinfile:
+        path: "{{ playbook_dir }}/projects/RPIProject/sendsensorsdata.py"
+        regexp: "^PG_PASSWORD =.*"
+        line: "PG_PASSWORD = \"{{ pg_sensors_password }}\""
+        state: present
+      when: pocFile.stat.exists
+    - name: "Set PG_DATABASE"
+      lineinfile:
+        path: "{{ playbook_dir }}/projects/RPIProject/sendsensorsdata.py"
+        regexp: "^PG_DATABASE =.*"
+        line: "PG_DATABASE = \"{{ pg_sensors_database }}\""
+        state: present
+      when: pocFile.stat.exists
+    - name: "Set PG_USERNAME"
+      lineinfile:
+        path: "{{ playbook_dir }}/projects/RPIProject/sendsensorsdata.py"
+        regexp: "^PG_USERNAME =.*"
+        line: "PG_USERNAME = \"{{ pg_sensors_username }}\""
+        state: present
+      when: pocFile.stat.exists
+    - name: "Set PG_PORT"
+      lineinfile:
+        path: "{{ playbook_dir }}/projects/RPIProject/sendsensorsdata.py"
+        regexp: "^PG_PORT =.*"
+        line: "PG_PORT = \"{{ pg_sensors_port }}\""
+        state: present
+      when: pocFile.stat.exists
     - name: "Add organization"
       tower_organization:
         name: "{{ tower_org }}"
@@ -49,7 +90,7 @@
 #      register: credo
       command: "{{ playbook_dir }}/createCredential.sh"
     - name: "Init git repository"
-      shell: "git init {{ playbook_dir }}/projects/RPIProject/ ; cd {{ playbook_dir }}/projects/RPIProject/ ; git config user.name \"Commiter\" ; git config user.email \"test@test123.com\" ; git add rpiTemperature.yml; git commit -m \"initial commit\" "
+      shell: "git init {{ playbook_dir }}/projects/RPIProject/ ; cd {{ playbook_dir }}/projects/RPIProject/ ; git config user.name \"Commiter\" ; git config user.email \"test@test123.com\" ; git add .; git commit -m \"initial commit\" "
     - name: "Add project"
       command: "tower-cli project create --name=RPIProject --organization=\"{{ tower_org }}\" --scm-type=git --scm-url=\"/var/projects/RPIProject\" -u {{ tower_username }} -p {{ tower_password }} -h {{ tower_host }} --insecure"
     - name: "Sleep for 30 seconds to make sure the project is synced"

@@ -115,5 +115,3 @@
       src: "{{ rpi_image }}"
       state: absent
     become: yes
-
-

@@ -1,0 +1,22 @@
+- name: "Raspberry setup for temperature read"
+  hosts: all
+  tasks:
+  - name: "Install pip"
+    apt:
+      name: python-pip,libpq-dev
+      update_cache: yes 
+    become: yes
+  - name: "Install psycopg2"
+    pip:
+      name: psycopg2
+    become: yes
+  - name:
+    copy:
+      src: "{{ playbook_dir }}/sendsensorsdata.py"
+      dest: "/home/pi/sendsensorsdata.py"
+      owner: pi
+  - name: "Install cron job"
+    cron:
+      name: "Run temp check"
+      minute: "*"
+      job: "/usr/bin/python /home/pi/sendsensorsdata.py"
