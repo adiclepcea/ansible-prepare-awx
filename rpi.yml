@@ -40,11 +40,13 @@
     file:
       path: "{{ root_dir }}/home/pi/.ssh"
       state: directory
+      owner: 1000
       mode: 0700
   - name: "Copy public key to raspberry"
     copy:
       src: ./keys/awx.pub
       dest: "{{ root_dir }}/home/pi/.ssh/authorized_keys"
+      owner: 1000
       mode: 0644
   - name: "Setup ssh on start on RPI image"
     file:
@@ -60,7 +62,7 @@
       insertbefore: "exit 0"
       state: present
       line: "python /home/pi/register.py || true"
-    when: test_grep.stdout != ""
+    when: test_grep.stdout == ""
     become: yes
   - name: "Copy autoregister script to python"
     copy:

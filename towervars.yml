@@ -2,7 +2,6 @@ tower_username: admin
 tower_password: password
 tower_host: https://localhost:443
 tower_org: RPIOrg
-rpi_inventory: "RPI inventory"
 rpi_awx_username: "test"
 rpi_awx_password: "test123"
 rpi_awx_email: "test@test123.com"
